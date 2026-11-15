@@ -2,6 +2,14 @@
 import json
 from .frames import encode, scan
 
+
+def _page_key(page_id):
+    """页号比较键：数字形式（int 或数字字符串）统一按 int 比较。"""
+    if isinstance(page_id, str) and page_id.isdigit():
+        return int(page_id)
+    return page_id
+
+
 class Pages:
     def __init__(self, device):
         self.device = device
@@ -11,7 +19,8 @@ class Pages:
         if not raw:
             return {'page_id': page_id, 'lsn': 0, 'value': None}
         frames, consumed, torn = scan(raw)
-        if torn or consumed != len(raw) or len(frames) != 1 or frames[0]['page_id'] != page_id:
+        if (torn or consumed != len(raw) or len(frames) != 1
+                or _page_key(frames[0]['page_id']) != _page_key(page_id)):
             raise ValueError('页内容损坏')
         return frames[0]
 
